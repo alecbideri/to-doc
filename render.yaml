@@ -1,0 +1,31 @@
+# Render Blueprint for Y-Docs for LLMs
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: y-docs
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn src.server.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.4"
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        sync: false  # Set this in the Render dashboard
+      # Optional: YouTube API Key for enhanced features
+      - key: YOUTUBE_API_KEY
+        sync: false
+      # Optional: OpenAI API Key for AI-enhanced processing
+      - key: OPENAI_API_KEY
+        sync: false
+      # Optional: Proxy configuration for cloud deployment
+      - key: YTA_HTTP_PROXY
+        sync: false
+      - key: YTA_HTTPS_PROXY
+        sync: false
+    healthCheckPath: /health
+    autoDeploy: true
