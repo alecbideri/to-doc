@@ -1,8 +1,6 @@
-# YouTube to Doc
+# Y-Docs for LLMs
 
-https://github.com/user-attachments/assets/4431d283-23c3-40eb-8c65-a20361a3e945
-
-Turn any YouTube video into a comprehensive documentation link that AI coding tools and LLMs can easily index and understand.
+Turn any YouTube video into structured documentation that AI coding tools and LLMs can easily index and understand.
 
 ## 🚀 Features
 
@@ -31,8 +29,8 @@ Turn any YouTube video into a comprehensive documentation link that AI coding to
 
 ```bash
 # Clone the repository
-git clone https://github.com/filiksyos/Youtube-to-Doc.git
-cd youtubedoc
+git clone https://github.com/alecbideri/to-doc.git
+cd to-doc
 
 # Run with Docker Compose
 docker-compose up -d
@@ -42,10 +40,10 @@ docker-compose up -d
 
 ```bash
 # Clone the repository
-git clone https://github.com/filiksyos/Youtube-to-Doc.git
-cd youtubedoc
+git clone https://github.com/alecbideri/to-doc.git
+cd to-doc
 
-# Install dependencies (using pnpm as specified in requirements)
+# Install dependencies
 pip install -r requirements.txt
 
 # Run the application
@@ -71,7 +69,7 @@ uvicorn src.server.main:app --host 0.0.0.0 --port 8000 --reload
 ```bash
 curl -X POST "http://localhost:8000/" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "input_text=https://www.youtube.com/watch?v=dQw4w9WgXcQ" \
+  -d "input_text=https://www.youtube.com/watch?v=VIDEO_ID" \
   -d "max_transcript_length=10000" \
   -d "language=en" \
   -d "include_comments=false"
@@ -84,7 +82,7 @@ import requests
 
 url = "http://localhost:8000/"
 data = {
-    "input_text": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "input_text": "https://www.youtube.com/watch?v=VIDEO_ID",
     "max_transcript_length": 10000,
     "language": "en",
     "include_comments": False
@@ -111,73 +109,28 @@ cp .env.example .env
 
 ### AWS S3 Integration (for cloud documentation links)
 
-To publish generated docs to S3 and show "View Documentation" and "Copy Documentation Link" buttons (as used on `youtubetodoc.com`), configure an S3 bucket and environment variables.
+To publish generated docs to S3, configure an S3 bucket and environment variables:
 
-1) Create an S3 bucket
-- Region: choose your region (e.g., eu-north-1)
-- Object Ownership: ACLs disabled (Bucket owner enforced)
-- Public access: turn OFF “Block all public access” if you want public S3 URLs
+1. Create an S3 bucket with appropriate permissions
+2. Set environment variables in `.env`:
 
-2) Add a read-only bucket policy (recommended to scope to `docs/`):
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AllowPublicReadDocs",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::YOUR_BUCKET/docs/*"
-    }
-  ]
-}
-```
-
-3) Set environment variables in `.env`:
 ```bash
 AWS_S3_BUCKET=YOUR_BUCKET
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_REGION=eu-north-1
+AWS_REGION=your-region
 ```
-
-4) Restart the server so `.env` is reloaded.
-
-Notes
-- The app auto-detects the bucket's real region to construct the correct URL, avoiding PermanentRedirect.
-- If you prefer not to expose public S3, keep Block Public Access on and serve via CloudFront instead.
 
 ### Proxy Configuration (Cloud Deployment Only)
 
-**⚠️ Note: This is only needed for cloud deployment (Render, Heroku, AWS, etc.). Local development works without proxies.**
+**⚠️ Note: This is only needed for cloud deployment. Local development works without proxies.**
 
-When deploying to cloud providers, YouTube often blocks requests from cloud IPs, causing `IpBlocked` or `RequestBlocked` errors. To fix this, configure rotating residential proxies:
+When deploying to cloud providers, YouTube may block requests from cloud IPs. Configure rotating residential proxies:
 
-1) **Sign up for Webshare** (recommended by `youtube-transcript-api`):
-   - Visit [webshare.io](https://www.webshare.io) and create an account
-   - Purchase a "Rotating Residential" plan (NOT "Proxy Server" or "Static Residential")
-   - Go to Proxies → Rotating Residential → Proxy Settings to get your credentials
-
-2) **Set environment variables** in your deployment:
-```bash
-# Webshare credentials (base username/password)
-YTA_WEBSHARE_USERNAME=your_webshare_username
-YTA_WEBSHARE_PASSWORD=your_webshare_password
-YTA_WEBSHARE_LOCATIONS=jp,kr,tw  # optional: filter by countries
-
-# Proxy URLs for yt-dlp/pytube (use specific pod usernames from your proxy list)
-YTA_HTTP_PROXY=http://your_pod_username:your_password@p.webshare.io:80
-YTA_HTTPS_PROXY=http://your_pod_username:your_password@p.webshare.io:80
-```
-
-3) **Alternative**: Use any HTTP/HTTPS proxy provider:
 ```bash
 YTA_HTTP_PROXY=http://user:pass@proxy-host:port
 YTA_HTTPS_PROXY=https://user:pass@proxy-host:port
 ```
-
-The app will automatically route YouTube API calls through the proxy when these variables are set.
 
 ## 📋 Supported YouTube URL Formats
 
@@ -225,12 +178,11 @@ docker-compose up -d
 ### Production
 
 ```bash
-# Build and run
-docker build -t youtubedoc .
+docker build -t y-docs .
 docker run -p 8000:8000 \
   -e ALLOWED_HOSTS=yourdomain.com \
   -e DEBUG=False \
-  youtubedoc
+  y-docs
 ```
 
 ## 📝 Example Output
@@ -244,8 +196,6 @@ The generated documentation includes:
 - **Token Estimation**: Estimated token count for LLM usage
 
 ## 🧪 Testing
-
-Run tests (when available):
 
 ```bash
 python -m pytest tests/
@@ -263,21 +213,6 @@ python -m pytest tests/
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
-
-- Inspired by [Gittodoc](https://github.com/filiksyos/gittodoc) for the overall architecture and design
-- Built with [FastAPI](https://fastapi.tiangolo.com/) for the web framework
-- Uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) for robust YouTube video processing
-- Styled with [Tailwind CSS](https://tailwindcss.com/) for the modern UI
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-
-1. Check the [API documentation](http://localhost:8000/api) 
-2. Review the [issues page](https://github.com/your-username/youtubedoc/issues)
-3. Create a new issue if needed
-
 ---
 
-**Made with ❤️ for the AI and developer community** 
+**Made with ❤️ for the AI and developer community**
